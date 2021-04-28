@@ -98,14 +98,14 @@
 	
 	    <repository>
 	      <id>nexus</id>
-	      <name>Mithun Technologies Releases Nexus Repository</name>
-	      <url>http://65.2.57.113:9981/mphasisandco/repository/amazon-release/</url>
+	      <name>Suji Releases Nexus Repository</name>
+	      <url>http://3.26.23.237:8081/repository/Walmart-Release/</url>
 	    </repository>
 	    
 	    <snapshotRepository>
 	      <id>nexus</id>
-	      <name>Mithun Technologies Snapshot Nexus Repository </name>
-	      <url>http://65.2.57.113:9981/mphasisandco/repository/amazon-snapshot/</url>
+	      <name>Suji Snapshot Nexus Repository </name>
+	      <url>http://3.26.23.237:8081/repository/Walmart-Snapshot/</url>
 	    </snapshotRepository>
 	    
 	</distributionManagement>
