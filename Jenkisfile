@@ -1,0 +1,39 @@
+node ()
+{
+def mavenHome = tool name: "Maven-3.8.1"
+
+stage ('checkoutgit')
+{
+git credentialsId: '5af049a6-5cfd-4204-bc7d-7cebed2210e9', url: 'https://github.com/painbalm/maven-web-application.git'
+}
+
+stage ('Build')
+{
+ sh "${mavenHome}/bin/mvn clean package"
+}
+
+stage ('sonar')
+{
+ sh "${mavenHome}/bin/mvn sonar:sonar"
+}
+
+
+stage ('Nexus')
+{
+ sh "${mavenHome}/bin/mvn deploy"
+}
+
+stage ('Tomcat')
+{
+sshagent(['7fdaa182-069f-42f6-84fa-7114180ec454'])
+ {
+sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war  ec2-user@3.26.6.169:/opt/apache-tomcat-9.0.45/webapps/" 
+ }
+}
+stage('Email Notification')
+{
+emailext body: 'Build details', subject: 'Build details', to: 'sujithraselvaraj94@gmail.com'
+}
+
+}
+
