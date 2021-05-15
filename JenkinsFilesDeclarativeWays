@@ -1,0 +1,76 @@
+pipeline{
+
+agent any
+
+triggers{
+pollSCM('* * * * *')
+}
+
+environment {
+      CF_VERSION = '1.0'
+      CF_API = ''
+      DEPLOY_ENV = "${params.environment}"
+   }
+
+tools{
+maven 'Maven-3.8.1'
+}
+
+
+options{
+
+timestamps()
+
+buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '3', daysToKeepStr: '', numToKeepStr: '3'))
+}
+
+
+stages{
+
+stage('CheckoutcodeGit'){
+steps{
+git credentialsId: '5af049a6-5cfd-4204-bc7d-7cebed2210e9', url: 'https://github.com/painbalm/maven-web-application.git'
+}
+}
+
+
+stage('BuildMaven'){
+steps{
+sh "mvn clean package"
+}
+}
+
+stage('SonarQubeReport'){
+steps{
+sh "mvn sonar:sonar"
+}
+}
+
+stage('NexusRepo'){
+steps{
+sh "mvn deploy"
+}
+}
+
+stage('Tomcat'){
+steps{
+sshagent(['Tomcat']) {
+ sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war  ec2-user@3.26.20.13:/opt/apache-tomcat-9.0.45/webapps/"    
+}
+
+}
+}
+}
+
+post{
+always{
+   emailext body: 'Build success/failed', recipientProviders: [culprits(), upstreamDevelopers()], subject: 'Build success', to: 'sujithraselvaraj94@gmail.com'
+}
+success{
+emailext body: 'Build success', recipientProviders: [culprits(), upstreamDevelopers()], subject: 'Build success', to: 'sujithraselvaraj94@gmail.com'
+}
+failure {
+emailext body: 'Build failed', recipientProviders: [culprits(), upstreamDevelopers()], subject: 'Build success', to: 'sujithraselvaraj94@gmail.com'
+}
+}
+}
