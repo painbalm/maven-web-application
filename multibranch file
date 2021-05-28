@@ -1,0 +1,75 @@
+pipeline 
+{
+    agent any 
+
+trigger
+{
+pollSCM(* * * * *)
+}
+option
+{
+buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '3', daysToKeepStr: '', numToKeepStr: '3'))
+}
+
+    tools
+    {
+     maven 'Maven-3.6.3'
+    }
+    stages
+    {
+        stage('Checkout Git')
+        {
+            steps 
+            {
+                git credentialsId: '3ee72989-f694-4b81-a726-39b6e827e367', url: 'https://github.com/painbalm/maven-web-application.git'
+            }
+        }
+
+        stage('Build Maven')
+        {
+            steps
+            {
+                sh "mvn clean package"
+            }
+        }
+       
+        stage('sonar report')
+        {
+            steps
+            {
+                sh "mvn package sonar:sonar"
+            }
+        }
+       
+	    stage('Nexus Artifacts')
+        {
+            steps
+            {
+                sh "mvn clean deploy"
+            }
+        }
+        
+
+        stage('Tomcat')
+        {
+            steps
+            {
+				sshagent(['6dbf2f9f-de58-4c77-a888-09a959c4557b']) 
+				{
+					sh  "scp -o StrictHostKeyChecking=no  target/maven-web-application.war ec2-user@13.211.190.192:/opt/tomcat9/webapps"
+				}
+            }
+        }
+    }
+		post
+		{
+			success
+			{
+			emailext body: 'build success', subject: 'Build details', to: 'amshangover@gmail.com'
+			}
+			failure
+			{
+			emailext body: 'build failed', subject: 'Build details', to: 'amshangover@gmail.com'
+			}
+		}
+}
